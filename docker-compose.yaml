@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - ./init-seed-mongo.js:/docker-entrypoint-initdb.d/init-seed-mongo.js
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+    networks:
+      - db_network
+
+  neo4j:
+    image: neo4j:latest
+    container_name: neo4j
+    ports:
+      - "7474:7474"  # Interface web
+      - "7687:7687"  # Connexion Bolt
+    environment:
+      NEO4J_AUTH: neo4j/password
+    volumes:
+      - neo4j_data:/data
+      - ./init-seed-neo4j.cypher:/var/lib/neo4j/import/init-seed-neo4j.cypher
+    networks:
+      - db_network
+
+volumes:
+  mongo_data:
+  neo4j_data:
+
+networks:
+  db_network:
+    driver: bridge
