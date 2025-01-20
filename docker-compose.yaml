@@ -7,10 +7,7 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-      - ./init-seed-mongo.js:/docker-entrypoint-initdb.d/init-seed-mongo.js
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
+      - ./seeders/seed-mongo.js:/docker-entrypoint-initdb.d/seed-mongo.js
     networks:
       - db_network
 
@@ -24,7 +21,7 @@ services:
       NEO4J_AUTH: neo4j/password
     volumes:
       - neo4j_data:/data
-      - ./init-seed-neo4j.cypher:/var/lib/neo4j/import/init-seed-neo4j.cypher
+      - ./seeders/seed-neo4j.cypher:/var/lib/neo4j/import/seed-neo4j.cypher
     networks:
       - db_network
 
