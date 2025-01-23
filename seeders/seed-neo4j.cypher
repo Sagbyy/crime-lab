@@ -1,7 +1,10 @@
-// Crée des nœuds pour des utilisateurs
-CREATE (u1:User {name: 'John Doe', email: 'john@example.com'})
-CREATE (u2:User {name: 'Jane Doe', email: 'jane@example.com'})
+// seed.cypher
+CREATE (:User {name: 'Salah Ad-Din Bouhdjeur', age: 30});
+CREATE (:User {name: 'Ali', age: 25});
+CREATE (:User {name: 'Khadija', age: 28});
+CREATE (:Product {name: 'Laptop', price: 1200});
+CREATE (:Product {name: 'Phone', price: 800});
+CREATE (:Order {id: 1, total: 2000});
 
-// Crée une relation entre les utilisateurs
-MATCH (u1:User {name: 'John Doe'}), (u2:User {name: 'Jane Doe'})
-CREATE (u1)-[:FRIEND]->(u2)
+MATCH (u:User {name: 'Salah Ad-Din Bouhdjeur'}), (p:Product {name: 'Laptop'})
+CREATE (u)-[:PURCHASED]->(p);

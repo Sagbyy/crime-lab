@@ -1,8 +1,8 @@
 version: '3.8'
 services:
   mongo:
-    image: mongo:latest
-    container_name: mongo
+    image: mongo:8.0.4
+    container_name: mongodb
     ports:
       - "27017:27017"
     volumes:
@@ -12,16 +12,16 @@ services:
       - db_network
 
   neo4j:
-    image: neo4j:latest
+    image: neo4j:5.26-community
     container_name: neo4j
-    ports:
-      - "7474:7474"  # Interface web
-      - "7687:7687"  # Connexion Bolt
     environment:
-      NEO4J_AUTH: neo4j/password
+      - NEO4J_AUTH=neo4j/password
     volumes:
       - ./data/neo4j_data:/data
       - ./seeders/seed-neo4j.cypher:/var/lib/neo4j/import/seed-neo4j.cypher
+    ports:
+      - "7474:7474"
+      - "7687:7687"
     networks:
       - db_network
 
