@@ -67,7 +67,7 @@ db.affaire.insertMany([
       {
         temoin : "temoin_004",
         declaration: "on a un jeune de type magrhebin qui faisait du cross foncé vers un agent de l'asvp",
-        date:'2025-01-16T18:00:00Z ',
+        date:'2025-01-16T18:00:00Z',
       },
     ],
     lieux: [
@@ -82,3 +82,4 @@ db.affaire.insertMany([
   },
 
 ]);
+

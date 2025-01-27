@@ -8,3 +8,4 @@ CREATE (:Order {id: 1, total: 2000});
 
 MATCH (u:User {name: 'Salah Ad-Din Bouhdjeur'}), (p:Product {name: 'Laptop'})
 CREATE (u)-[:PURCHASED]->(p);
+

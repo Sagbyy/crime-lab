@@ -25,6 +25,17 @@ services:
     networks:
       - db_network
 
+  node-app:
+    image: node:latest
+    container_name: app-node
+    ports: 
+      - "3000:3000"
+    depends_on:
+      - mongo
+      - neo4j    
+    networks:
+      - db_network    
+
 volumes:
   mongo_data:
   neo4j_data:
