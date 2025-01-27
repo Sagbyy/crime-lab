@@ -59,4 +59,26 @@ db.affaire.insertMany([
       },
     ],
   },
+  {
+    affaire_id: "affaire_003",
+    description: "Affaire concernant un delit de fuite avec violence aggravé sur agent depositaire de l'autorité publique",
+    individus: ["individu_002","individu_006"],
+    temoignages: [
+      {
+        temoin : "temoin_004",
+        declaration: "on a un jeune de type magrhebin qui faisait du cross foncé vers un agent de l'asvp",
+        date:'2025-01-16T18:00:00Z ',
+      },
+    ],
+    lieux: [
+      {
+        adresse: "15 avenue du chenay",
+        coordonnees: {
+          latitude: 48.8708,
+          longitude: 2.3075,
+        },
+      },
+    ],
+  },
+
 ]);
