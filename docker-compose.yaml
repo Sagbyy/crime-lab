@@ -28,8 +28,11 @@ services:
   node-app:
     image: node:latest
     container_name: app-node
+    restart : always
     ports: 
       - "3000:3000"
+    volumes:
+      - ./api:/data  
     depends_on:
       - mongo
       - neo4j    
