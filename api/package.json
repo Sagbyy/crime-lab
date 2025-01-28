@@ -1,0 +1,14 @@
+{
+  "name": "fastify-api",
+  "version": "1.0.0",
+  "description": "API with Fastify, MongoDB, and Neo4j for crimelab",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "fastify": "^4.14.1",
+    "mongodb": "^5.4.0",
+    "neo4j-driver": "^5.8.1"
+  }
+}

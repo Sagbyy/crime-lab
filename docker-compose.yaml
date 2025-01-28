@@ -26,9 +26,9 @@ services:
       - db_network
 
   node-app:
-    image: node:latest
+    build:
+      context: ./api
     container_name: app-node
-    restart : always
     ports: 
       - "3000:3000"
     volumes:

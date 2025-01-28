@@ -30,8 +30,9 @@ async function connectNeo4j() {
 // Route pour récupérer les affaires depuis MongoDB
 fastify.get('/affaires', async (request, reply) => {
   const db = mongoClient.db(dbName);
-  const collection = db.collection('affaires');
+  const collection = db.collection('affaire');
   const affaires = await collection.find().toArray();
+  console.log(`ma route fonctionne est voici les datas : ${affaires}` );
   return affaires;
 });
 
@@ -43,7 +44,7 @@ fastify.get('/suspects', async (request, reply) => {
 });
 
 // Lancer Fastify et les connexions MongoDB & Neo4j
-fastify.listen(3000, async (err, address) => {
+fastify.listen({port: 3000, host: '0.0.0.0'}, async (err, address) => {
   if (err) {
     console.error(err);
     process.exit(1);
