@@ -27,7 +27,7 @@ async function connectNeo4j() {
   console.log('Neo4j connecté');
 }
 
-/*MES ENDPOINT EN GET POUR LES BASES MONGO*/ 
+/*MES ENDPOINT EN GET POUR INTERAGIR AVEC LES BASES MONGO*/ 
 
 // Route pour récupérer les affaires depuis MongoDB
 fastify.get('/affaires', async (request, reply) => {
@@ -74,13 +74,13 @@ fastify.get('/individus', async (request, reply) => {
 //route pour récupérer les individus par id depuis MongoDB
 fastify.get('/individu/:id', async (req, reply) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params;//destructuration (vu que req.params va me retourner un objet)
     const db = mongoClient.db(dbName);
     const collection = db.collection('individu');
-    const individu = await collection.findOne( {_id: id } );
+    const individu = await collection.findOne( { _id: id } );
 
     if (!individu) {
-      return reply.status(404).send("Individu non trouvé");
+      return reply.status(404).send(`Individu avec l'id ${id} non trouvé`);
     }
     return reply.send(individu);
   } catch (error) {
@@ -89,18 +89,114 @@ fastify.get('/individu/:id', async (req, reply) => {
 });
 
 
-//por récupérer tous les lieux depuis ma base mongo
+//pour récupérer tous les lieux depuis ma base mongo
 fastify.get('/lieux', async (req, reply)=> {
 
   try{
     const db = mongoClient.db(dbName);
     const collection =db.collection('lieu');
     const lieux = await collection.find().toArray();
+
     return lieux;
+
   }catch(error){
     reply.status(404).send('erreur lors de la récupération des lieux depuis mongo : '+ error);
   }
 
+});
+
+//pour récuperer un lieu par son ID 
+fastify.get('/lieu/:id', async (req, reply) => {
+
+  try{
+    const id = req.params.id;
+    const db = mongoClient.db(dbName);
+    const collection = db.collection('lieu');
+    const lieu = await collection.findOne( {_id : new ObjectId(id)} );
+
+    if(!lieu){
+      reply.status(404).send(`aucun lieu ne correspond à l'id suivant : ${id}`);
+    }
+
+    return lieu;
+
+  }catch(error){
+    reply.status(404).send("erreur lors de la récupération d'un lieu par son ID")
+  }
+
+});
+
+//pour récupérer tous les appels depuis ma base mongo
+fastify.get('/appels', async (req , reply) => {
+
+  try{
+    const db = mongoClient.db(dbName);
+    const collection = db.collection('appel');
+    const appels = collection.find().toArray();
+
+    if(!appels){
+      reply.status(404).send("aucun appels trouvé");
+    }
+
+    return appels;
+
+  }catch(error){
+    reply.status(404).send("erreur lors de la récupérations des appelles");
+  }
+
+}); 
+
+//pour récupérer un appelle par son ID
+fastify.get('/appel/:id', async (req, reply) => {
+
+  try{
+    const id = req.params.id;
+    const db = mongoClient.db(dbName);
+    const collection = db.collection('appel');
+    const appel = await collection.findOne( {appelant_id : new ObjectId(id)});
+    
+    if(!appel){
+      reply.send(`Aucun appel ne correspond  à l'id : ${id}`);
+    }
+
+    return appel;
+  
+  }catch(error){
+    reply.status(404).send("erreru lors de la récupération de d'un appel par son ID ");
+  }
+
+});
+
+
+/*MES ENDPOINT EN GET POUR INTERAGIR AVEC LA BASE NEO4J*/ 
+
+// Route pour récupérer les suspects depuis Neo4j
+fastify.get('/suspects', async (request, reply) => {
+  try {
+    const result = await session.run('MATCH (n:Individu) WHERE n.statut = "suspect" RETURN n');
+    const suspects = result.records.map(record => record.get('n').properties);
+    
+    return suspects;
+ 
+  } catch (error) {
+    reply.status(500).send('Erreur lors de la récupération des suspects');
+  }
+});
+
+//pour récupérer tous les suspect pour une affaire donnés
+fastify.get('/suspect/:id', async (req, reply) => {
+  try{
+    const {id} = req.params;
+
+    const result = session.run(`
+      MATCH (i: Individu {id : $id} )
+      RETURN i.id AS id
+    `);
+
+  }catch(error){
+    console.log(error);
+    reply.status(500).send("Erreur lors de la récupération des suspect pour une affaire donné");
+  }
 });
 
 
@@ -108,6 +204,8 @@ fastify.get('/lieux', async (req, reply)=> {
 
 
 
+
+/*MES ENDPOINT POST POUR INTERAGIR AVEC MA BASE MONGO*/ 
 
 // Route pour ajouter une nouvelle affaire dans MongoDB
 fastify.post('/affaire', async (req, reply) => {
@@ -134,16 +232,7 @@ fastify.post('/affaire', async (req, reply) => {
   }
 });
 
-// Route pour récupérer les suspects depuis Neo4j
-fastify.get('/suspects', async (request, reply) => {
-  try {
-    const result = await session.run('MATCH (n:Individu) WHERE n.statut = "suspect" RETURN n');
-    const suspects = result.records.map(record => record.get('n').properties);
-    return suspects;
-  } catch (error) {
-    reply.status(500).send('Erreur lors de la récupération des suspects');
-  }
-});
+
 
 // Route pour ajouter un individu dans Neo4j
 fastify.post('/individu', async (req, reply) => {
@@ -161,6 +250,9 @@ fastify.post('/individu', async (req, reply) => {
     reply.status(500).send('Erreur lors de l\'ajout de l\'individu');
   }
 });
+
+
+
 
 // Lancer Fastify et les connexions MongoDB & Neo4j
 fastify.listen({ port: 3000, host: '0.0.0.0' }, async (err, address) => {
