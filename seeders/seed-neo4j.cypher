@@ -1,36 +1,185 @@
-CREATE (ind1:Individu {id: "1", nom: "Dupont", prenom: "Jean", statut: "suspect"})
-CREATE (ind2:Individu {id: "2", nom: "Martin", prenom: "Lucie", statut: "temoin"})
-CREATE (ind3:Individu {id: "3", nom: "Lemoine", prenom: "Paul", statut: "suspect"})
-CREATE (ind4:Individu {id: "4", nom: "Garnier", prenom: "Alice", statut: "temoin"})
+// Clear database
+MATCH (n) DETACH DELETE n;
 
-CREATE (lieu1:Lieu {id: "1", adresse: "123 rue de la Paix, Paris", coordinates: point({latitude: 48.8566, longitude: 2.3522}), type: "parking"})
-CREATE (lieu2:Lieu {id: "2", adresse: "456 avenue des Champs-Élysées, Paris", coordinates: point({latitude: 48.8700, longitude: 2.3050}), type: "magasin"})
+// Individus
+CREATE (i1:Individu {
+  id: 'i1',
+  nom: 'Doe',
+  prenom: 'John',
+  date_naissance: date('1980-01-01')
+})
+CREATE (i2:Individu {
+  id: 'i2',
+  nom: 'Doe',
+  prenom: 'Jane',
+  date_naissance: date('1985-01-01')
+})
+CREATE (i3:Individu {
+  id: 'i3',
+  nom: 'Doe',
+  prenom: 'Jack',
+  date_naissance: date('1990-01-01')
+})
+CREATE (i4:Individu {
+  id: 'i4',
+  nom: 'Doe',
+  prenom: 'Jill',
+  date_naissance: date('1995-01-01')
+})
+CREATE (i5: Individu {
+    id: 'i5',
+    nom: 'Doe',
+    prenom: 'James',
+    date_naissance: date('2000-01-01')
+})
+CREATE (i6:Individu {
+    id: 'i6',
+    nom: 'Smith',
+    prenom: 'Anna',
+    date_naissance: date('1998-02-15')
+})
+CREATE (i7:Individu {
+    id: 'i7',
+    nom: 'Brown',
+    prenom: 'Michael',
+    date_naissance: date('1978-07-22')
+})
+CREATE (i8:Individu {
+    id: 'i8',
+    nom: 'Taylor',
+    prenom: 'Sarah',
+    date_naissance: date('1989-04-09')
+})
+CREATE (i9:Individu {
+    id: 'i9',
+    nom: 'Johnson',
+    prenom: 'Robert',
+    date_naissance: date('1993-03-30')
+})
+CREATE (i10:Individu {
+    id: 'i10',
+    nom: 'Miller',
+    prenom: 'Linda',
+    date_naissance: date('2001-06-14')
+})
+CREATE (i11:Individu {
+    id: 'i11',
+    nom: 'Wilson',
+    prenom: 'David',
+    date_naissance: date('1995-09-12')
+})
+CREATE (i12:Individu {
+    id: 'i12',
+    nom: 'Moore',
+    prenom: 'Laura',
+    date_naissance: date('1987-11-01')
+})
+CREATE (i13:Individu {
+    id: 'i13',
+    nom: 'Jackson',
+    prenom: 'William',
+    date_naissance: date('1982-08-30')
+})
+CREATE (i14:Individu {
+    id: 'i14',
+    nom: 'Harris',
+    prenom: 'Elizabeth',
+    date_naissance: date('2000-01-01')
+})
 
-CREATE (affaire1:Affaire {id: "1", reference: "AFF-2024-001", date: date("2024-01-28"), type: "cambriolage", description: "Cambriolage d'une voiture dans un parking", statut: "en_cours"})
-CREATE (affaire2:Affaire {id: "2", reference: "AFF-2024-002", date: date("2024-01-29"), type: "vol", description: "Vol dans un magasin", statut: "en_cours"})
-CREATE (affaire3:Affaire {id: "3", reference: "AFF-2024-003", date: date("2024-02-01"), type: "agression", description: "Agression en rue", statut: "en_cours"})
-CREATE (affaire4:Affaire {id: "4", reference: "AFF-2024-004", date: date("2024-02-05"), type: "incendie", description: "Incendie suspect", statut: "en_cours"})
-CREATE (affaire5:Affaire {id: "5", reference: "AFF-2024-005", date: date("2024-02-10"), type: "escroquerie", description: "Escroquerie par téléphone", statut: "en_cours"})
+// Appels
+CREATE (a1:Appel {
+    id: 'a1',
+    date: datetime('2020-01-01T10:00:00Z'),
+    duree: 60
+})
+CREATE (a2:Appel {
+    id: 'a2',
+    date: datetime('2020-01-01T11:00:00Z'),
+    duree: 30
+})
+CREATE (a3:Appel {
+    id: 'a3',
+    date: datetime('2020-01-01T12:00:00Z'),
+    duree: 45
+})
+CREATE (a4:Appel {
+    id: 'a4',
+    date: datetime('2020-01-01T13:00:00Z'),
+    duree: 15
+})
+CREATE (a5:Appel {
+    id: 'a5',
+    date: datetime('2020-01-01T14:00:00Z'),
+    duree: 20
+})
+CREATE (a6:Appel {
+    id: 'a6',
+    date: datetime('2020-01-01T15:00:00Z'),
+    duree: 35
+})
+CREATE (a7:Appel {
+    id: 'a7',
+    date: datetime('2020-01-01T16:00:00Z'),
+    duree: 40
+})
+CREATE (a8:Appel {
+    id: 'a8',
+    date: datetime('2020-01-01T17:00:00Z'),
+    duree: 50
+})
+CREATE (a9:Appel {
+    id: 'a9',
+    date: datetime('2020-01-01T18:00:00Z'),
+    duree: 30
+})
+CREATE (a10:Appel {
+    id: 'a10',
+    date: datetime('2020-01-01T19:00:00Z'),
+    duree: 25
+})
 
-CREATE (temoignage1:Temoignage {id: "1", date: date("2024-01-28"), contenu: "J'ai vu un homme en noir près de la voiture", fiabilite: 0.8})
-CREATE (temoignage2:Temoignage {id: "2", date: date("2024-01-29"), contenu: "Un homme a pris des objets dans le magasin", fiabilite: 0.9})
 
-CREATE (ind1)-[:SUSPECTE_DANS {depuis: date("2024-01-28")}]->(affaire1)
-CREATE (ind2)-[:TEMOIN_DANS {date: date("2024-01-28")}]->(affaire1)
-CREATE (ind3)-[:SUSPECTE_DANS {depuis: date("2024-01-29")}]->(affaire2)
-CREATE (ind4)-[:TEMOIN_DANS {date: date("2024-01-29")}]->(affaire2)
+// Antennes
+CREATE (ant1:Antenne {
+    id: 'ant1',
+    adresse: '1 rue de la Paix, Paris',
+    coordinates: point({latitude: 48.869860, longitude: 2.331470}),
+    type: 'VoLTE'
+})
+CREATE (ant2:Antenne {
+    id: 'ant2',
+    adresse: '2 rue de la Paix, Paris',
+    coordinates: point({latitude: 48.869860, longitude: 2.331470}),
+    type: 'GSM'
+})
+CREATE (ant3:Antenne {
+    id: 'ant3',
+    adresse: '7 avenue des Tulipes, Lyon',
+    coordinates: point({latitude: 48.869860, longitude: 2.331470}),
+    type: '5G'
+})
 
-CREATE (ind1)-[:A_APPELE {date: date("2024-01-28"), duree: 120}]->(ind3)
-CREATE (ind2)-[:A_APPELE {date: date("2024-01-29"), duree: 90}]->(ind4)
+// Relations
+CREATE (i1)-[:A_APPELE]->(a1)-[:APPEL_RECU]->(i2)
+CREATE (i1)-[:A_APPELE]->(a2)-[:APPEL_RECU]->(i3)
+CREATE (i1)-[:A_APPELE]->(a3)-[:APPEL_RECU]->(i4)
+CREATE (i4)-[:A_APPELE]->(a4)-[:APPEL_RECU]->(i5)
+CREATE (i5)-[:A_APPELE]->(a5)-[:APPEL_RECU]->(i14)
+CREATE (i6)-[:A_APPELE]->(a6)-[:APPEL_RECU]->(i2)
+CREATE (i6)-[:A_APPELE]->(a7)-[:APPEL_RECU]->(i3)
+CREATE (i13)-[:A_APPELE]->(a8)-[:APPEL_RECU]->(i4)
+CREATE (i8)-[:A_APPELE]->(a9)-[:APPEL_RECU]->(i9)
+CREATE (i11)-[:A_APPELE]->(a1)-[:APPEL_RECU]->(i10)
+CREATE (i12)-[:A_APPELE]->(a10)-[:APPEL_RECU]->(i11)
 
-CREATE (ind1)-[:PRESENT_A {date: date("2024-01-28")}]->(lieu1)
-CREATE (ind3)-[:PRESENT_A {date: date("2024-01-29")}]->(lieu2)
-
-CREATE (affaire1)-[:SE_DEROULE_A {date: date("2024-01-28")}]->(lieu1)
-CREATE (affaire2)-[:SE_DEROULE_A {date: date("2024-01-29")}]->(lieu2)
-
-CREATE (ind1)-[:A_TEMOIGNE {date: date("2024-01-28")}]->(temoignage1)
-CREATE (ind2)-[:A_TEMOIGNE {date: date("2024-01-29")}]->(temoignage2)
-
-CREATE (temoignage1)-[:CONCERNE]->(affaire1)
-CREATE (temoignage2)-[:CONCERNE]->(affaire2)
+CREATE (a1)-[:UTILISE_ANTENNE]->(ant1)
+CREATE (a2)-[:UTILISE_ANTENNE]->(ant1)
+CREATE (a3)-[:UTILISE_ANTENNE]->(ant2)
+CREATE (a4)-[:UTILISE_ANTENNE]->(ant2)
+CREATE (a5)-[:UTILISE_ANTENNE]->(ant1)
+CREATE (a6)-[:UTILISE_ANTENNE]->(ant1)
+CREATE (a7)-[:UTILISE_ANTENNE]->(ant2)
+CREATE (a8)-[:UTILISE_ANTENNE]->(ant2)
+CREATE (a9)-[:UTILISE_ANTENNE]->(ant3)
+CREATE (a10)-[:UTILISE_ANTENNE]->(ant3)

@@ -10,6 +10,7 @@ services:
       - ./seeders/seed-mongo.js:/docker-entrypoint-initdb.d/seed-mongo.js
     networks:
       - db_network
+    restart: unless-stopped
 
   neo4j:
     image: neo4j:5.26-community
