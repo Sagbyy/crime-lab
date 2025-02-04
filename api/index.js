@@ -100,7 +100,7 @@ fastify.get('/individu/:id', async (req, reply) => {
 });
 
 
-//Récupérer tous les appels sortant d'un individu
+//Récupérer tous les appels sortant d'un individu (pour les fadettes)
 fastify.get('/appel/:id', async (req, reply) => {
 
   try{
@@ -148,7 +148,22 @@ fastify.get('/appel/:id', async (req, reply) => {
 });
 
 
+//pour récupérer tous les individu qui sont suspect dans une affaire depuis Neo4j
+// fastify.get('/suspects', async (request, reply) => {
+//   try {
+//     const result = await session.run('MATCH (n:Individu) WHERE n.statut = "suspect" RETURN n');
+//     const suspects = result.records.map(record => record.get('n').properties);
 
+//     if(!suspects){
+//       reply.status(404).send("aucun suspect trouvé");
+//     }
+    
+//     return suspects;
+ 
+//   } catch (error) {
+//     reply.status(500).send('Erreur lors de la récupération des suspects');
+//   }
+// });
 
 
 
