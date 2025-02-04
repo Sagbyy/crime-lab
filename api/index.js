@@ -37,6 +37,7 @@ fastify.get('/affaires', async (request, reply) => {
     const affaires = await collection.find().toArray();
     return affaires;
   } catch (error) {
+    console.log(error);
     reply.status(500).send('Erreur lors de la récupération des affaires');
   }
 });
@@ -59,145 +60,129 @@ fastify.get('/affaire/:id', async (req , reply) => {
   }
 });
 
-//Route pour récuérer tous les individus depuis MongoDB
+//Route pour récuérer tous les individus depuis NEO4J
 fastify.get('/individus', async (request, reply) => {
   try {
-    const db = mongoClient.db(dbName);
-    const collection = db.collection('individu');
-    const individus = await collection.find().toArray();
-    return individus;
+    
+    const result = await session.run('Match (n: Individu) RETURN n');
+    const individus = result.records.map(record => record.get('n').properties);
+
+    if(result.records.length === 0){
+      reply.status(404).send("aucun individus trouvée");
+    }
+
+    return reply.send(individus);
+
   } catch (error) {
-    reply.status(500).send('Erreur lors de la récupération des individus');
+    console.log(error);
+    reply.status(500).send('Erreur lors de la récupération des individus!!');
   }
 });
 
-//route pour récupérer les individus par id depuis MongoDB
+//pour récupérer un individu à partir de son ID
 fastify.get('/individu/:id', async (req, reply) => {
-  try {
-    const { id } = req.params;//destructuration (vu que req.params va me retourner un objet)
-    const db = mongoClient.db(dbName);
-    const collection = db.collection('individu');
-    const individu = await collection.findOne( { _id: id } );
 
-    if (!individu) {
-      return reply.status(404).send(`Individu avec l'id ${id} non trouvé`);
+  try{
+
+    const { id } = req.params;
+    const result = await session.run('MATCH (ind: Individu {id : $id}) RETURN ind', {id});
+    const individu = result.records.map(record => record.get('ind').properties);
+
+    if(result.records.length === 0){
+      reply.status(404).send("aucun individus trouvée");
     }
-    return reply.send(individu);
-  } catch (error) {
-    reply.status(500).send('Erreur lors de la récupération de l\'individu');
+
+    reply.send(individu);
+
+  }catch(error){
+    reply.status(500).send("Erreur lors de la récupéartion d'un individu par son id");
   }
 });
 
 
-//pour récupérer tous les lieux depuis ma base mongo
-fastify.get('/lieux', async (req, reply)=> {
-
-  try{
-    const db = mongoClient.db(dbName);
-    const collection =db.collection('lieu');
-    const lieux = await collection.find().toArray();
-
-    return lieux;
-
-  }catch(error){
-    reply.status(404).send('erreur lors de la récupération des lieux depuis mongo : '+ error);
-  }
-
-});
-
-//pour récuperer un lieu par son ID 
-fastify.get('/lieu/:id', async (req, reply) => {
-
-  try{
-    const id = req.params.id;
-    const db = mongoClient.db(dbName);
-    const collection = db.collection('lieu');
-    const lieu = await collection.findOne( {_id : new ObjectId(id)} );
-
-    if(!lieu){
-      reply.status(404).send(`aucun lieu ne correspond à l'id suivant : ${id}`);
-    }
-
-    return lieu;
-
-  }catch(error){
-    reply.status(404).send("erreur lors de la récupération d'un lieu par son ID")
-  }
-
-});
-
-//pour récupérer tous les appels depuis ma base mongo
-fastify.get('/appels', async (req , reply) => {
-
-  try{
-    const db = mongoClient.db(dbName);
-    const collection = db.collection('appel');
-    const appels = collection.find().toArray();
-
-    if(!appels){
-      reply.status(404).send("aucun appels trouvé");
-    }
-
-    return appels;
-
-  }catch(error){
-    reply.status(404).send("erreur lors de la récupérations des appelles");
-  }
-
-}); 
-
-//pour récupérer un appelle par son ID
+//Récupérer tous les appels sortant d'un individu
 fastify.get('/appel/:id', async (req, reply) => {
 
   try{
-    const id = req.params.id;
-    const db = mongoClient.db(dbName);
-    const collection = db.collection('appel');
-    const appel = await collection.findOne( {appelant_id : new ObjectId(id)});
-    
-    if(!appel){
-      reply.send(`Aucun appel ne correspond  à l'id : ${id}`);
-    }
-
-    return appel;
-  
-  }catch(error){
-    reply.status(404).send("erreru lors de la récupération de d'un appel par son ID ");
-  }
-
-});
+    const { id } = req.params;
+    const result = await session.run(`
+      MATCH (ind: Individu {id: $id})-[apl:A_APPELE]->(a:Appel)-[u:UTILISE_ANTENNE]->(ant: Antenne)
+      MATCH (a)-[:APPEL_RECU]->(ind2 : Individu)
+      RETURN ind.id AS sourceId, ind.prenom AS sourceName, a.date AS date,a.duree As duree,
+             ind2.id as destinationId, ind2.prenom AS destinationName,
+             ant.id AS idAntenne, ant.adresse AS adresse, ant.coordinates AS localisation
 
 
-/*MES ENDPOINT EN GET POUR INTERAGIR AVEC LA BASE NEO4J*/ 
+      `,{ id }); // Passer l'ID comme paramètre pour sécuriser la requête 
 
-// Route pour récupérer les suspects depuis Neo4j
-fastify.get('/suspects', async (request, reply) => {
-  try {
-    const result = await session.run('MATCH (n:Individu) WHERE n.statut = "suspect" RETURN n');
-    const suspects = result.records.map(record => record.get('n').properties);
-    
-    return suspects;
- 
-  } catch (error) {
-    reply.status(500).send('Erreur lors de la récupération des suspects');
-  }
-});
+     if(result.records.length === 0){
+        reply.status(404).send('Auncun appel trouvé pour cette individus');
+     } 
 
-//pour récupérer tous les suspect pour une affaire donnés
-fastify.get('/suspect/:id', async (req, reply) => {
-  try{
-    const {id} = req.params;
+    const appels = result.records.map(record => ({
+      Date : record.get('date'),
+      Duree: record.get('duree'),
 
-    const result = session.run(`
-      MATCH (i: Individu {id : $id} )
-      RETURN i.id AS id
-    `);
+      Source : {
+        id : record.get('sourceId'),
+        prenom:record.get('sourceName')
+      },
+      Destination: {
+        id: record.get('destinationId'),
+        prenom: record.get('destinationName')
+      },
+      Loacalsiation_Relais: {
+        idAntenne : record.get('idAntenne'),
+        adresse : record.get('adresse'),
+        localisation: record.get('localisation')
+      }
 
+    }));
+
+
+  reply.send(appels);  
   }catch(error){
     console.log(error);
-    reply.status(500).send("Erreur lors de la récupération des suspect pour une affaire donné");
+    reply.status(500).send('Erreur lors de la récupérations des appels entrants');
   }
 });
+
+
+
+
+
+
+// // Route pour récupérer les lieux visités par un individu
+// fastify.get('/lieux/:id', async (req, reply) => {
+//   try {
+//     const { id } = req.params; // Récupère l'ID de l'individu depuis les paramètres
+
+//     // Requête Cypher pour trouver tous les lieux où l'individu a été présent
+//     const result = await session.run(
+//       `
+//       MATCH (ind:Individu {id: $id})-[p:PRESENT_A]->(l:Lieu)
+//       RETURN l.id AS lieu_id, l.adresse AS adresse, l.type AS type, l.coordinates AS coordinates
+//       `,
+//       { id } // Paramètre sécurisé
+//     );
+
+//     const lieux = result.records.map(record => ({
+//       lieu_id: record.get('lieu_id'),
+//       type: record.get('type'),
+//       adresse: record.get('adresse'),
+//       coordinates: record.get('coordinates')
+//     }));
+
+//     if (lieux.length === 0) {
+//       return reply.status(404).send({ message: "Aucun lieu trouvé pour cet individu" });
+//     }
+
+//     return reply.send(lieux); // Retourne la liste des lieux
+//   } catch (error) {
+//     console.error("Erreur lors de la récupération des lieux :", error);
+//     return reply.status(500).send({ message: "Erreur serveur" });
+//   }
+// });
 
 
 
