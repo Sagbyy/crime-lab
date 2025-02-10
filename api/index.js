@@ -2,6 +2,7 @@ const fastify = require('fastify')();
 const { MongoClient, ObjectId } = require('mongodb');
 const neo4j = require('neo4j-driver');
 
+
 // Configuration MongoDB
 const mongoUrl = 'mongodb://mongodb:27017';  // Nom du service MongoDB dans Docker
 const dbName = 'crimelab';
@@ -101,22 +102,27 @@ fastify.get('/individu/:id', async (req, reply) => {
 
 
 //Récupérer tous les appels sortant d'un individu (pour les fadettes)
-fastify.get('/appel/:id', async (req, reply) => {
+fastify.get('/appelS/:id', async (req, reply) => {
 
   try{
     const { id } = req.params;
     const result = await session.run(`
-      MATCH (ind: Individu {id: $id})-[apl:A_APPELE]->(a:Appel)-[u:UTILISE_ANTENNE]->(ant: Antenne)
-      MATCH (a)-[:APPEL_RECU]->(ind2 : Individu)
-      RETURN ind.id AS sourceId, ind.prenom AS sourceName, a.date AS date,a.duree As duree,
-             ind2.id as destinationId, ind2.prenom AS destinationName,
-             ant.id AS idAntenne, ant.adresse AS adresse, ant.coordinates AS localisation
+    MATCH (ind: Individu {id: $id})-[aplS:A_APPELE]->(a:Appel)-[u:UTILISE_ANTENNE]->(ant: Antenne)
+    MATCH (a)-[aplE:APPEL_RECU]->(ind2 : Individu)//destinataire
 
-
-      `,{ id }); // Passer l'ID comme paramètre pour sécuriser la requête 
+    RETURN ind.id AS sourceId, 
+          ind.prenom AS sourceName,
+          a.date AS date,
+          a.duree As duree,
+          ind2.id as destinationId,
+          ind2.prenom AS destinationName,
+          ant.id AS idAntenne, 
+          ant.adresse AS adresse, 
+          ant.coordinates AS localisation
+            `,{ id }); // Passer l'ID comme paramètre pour sécuriser la requête 
 
      if(result.records.length === 0){
-        reply.status(404).send('Auncun appel trouvé pour cette individus');
+        return reply.status(404).send('Auncun appel trouvé pour cet individus');
      } 
 
     const appels = result.records.map(record => ({
@@ -131,7 +137,10 @@ fastify.get('/appel/:id', async (req, reply) => {
         id: record.get('destinationId'),
         prenom: record.get('destinationName')
       },
-      Loacalsiation_Relais: {
+      Type_appel : {
+        type : "FR-APP-SORT"
+      },
+      Localsiation_Relais: {
         idAntenne : record.get('idAntenne'),
         adresse : record.get('adresse'),
         localisation: record.get('localisation')
@@ -146,6 +155,101 @@ fastify.get('/appel/:id', async (req, reply) => {
     reply.status(500).send('Erreur lors de la récupérations des appels entrants');
   }
 });
+
+
+
+
+
+
+//Récupérer tous les appels entran d'un individu (pour les fadettes)
+fastify.get('/appelE/:id', async (req, reply) => {
+
+  try{
+    const { id } = req.params;
+    const result = await session.run(`
+    MATCH (ind: Individu {id: $id})<-[aplE:APPEL_RECU]-(a:Appel)-[u:UTILISE_ANTENNE]->(ant: Antenne)//appel entrant 
+    MATCH (a)<-[aplS:A_APPELE]-(ind2 : Individu)//source
+
+    RETURN ind.id AS destinationId, 
+          ind.prenom AS destinationName,
+          a.date AS date,
+          a.duree As duree,
+          ind2.id as sourceId,
+          ind2.prenom AS sourceName,
+          ant.id AS idAntenne, 
+          ant.adresse AS adresse, 
+          ant.coordinates AS localisation
+       `,{ id }); // Passer l'ID comme paramètre pour sécuriser la requête 
+
+     if(result.records.length === 0){
+        return reply.status(404).send('Auncun appel entrant trouvé pour cet individus');
+     } 
+
+    const appels = result.records.map(record => ({
+      Date : record.get('date'),
+      Duree: record.get('duree'),
+
+      Source : {
+        id : record.get('sourceId'),
+        prenom:record.get('sourceName')
+      },
+      Destination: {
+        id: record.get('destinationId'),
+        prenom: record.get('destinationName')
+      },
+      Type_appel : {
+        type : "FR-APP-ENTR"
+      },
+      Localsiation_Relais: {
+        idAntenne : record.get('idAntenne'),
+        adresse : record.get('adresse'),
+        localisation: record.get('localisation')
+      }
+
+    }));
+
+
+  reply.send(appels);  
+  }catch(error){
+    console.log(error);
+    reply.status(500).send('Erreur lors de la récupérations des appels entrants');
+  }
+});
+
+
+
+
+
+//pour récupérer tous les suspect liée à une affaires
+fastify.get('/suspectsAffaire/:id', async (req, reply) => {
+
+  try{
+    const { id } = req.params;
+
+    const db = mongoClient.db(dbName);
+    const collection = db.collection('affaire');
+    const suspects = await collection.find({ _id: new ObjectId(id) }, { projection: { individus: 1, _id: 0 } }).toArray();
+
+  
+    if(!suspects){
+      reply.status(404).send('Auncun suspect trouvée');
+    }
+
+    return reply.send(suspects);
+
+  }catch(error){
+    console.log(error);
+    reply.status(500).send('erreur lors de la récupération des suspects dans une affaire');
+  }
+});
+
+
+
+
+
+
+
+
 
 
 //pour récupérer tous les individu qui sont suspect dans une affaire depuis Neo4j
