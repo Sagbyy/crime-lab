@@ -248,29 +248,6 @@ fastify.get('/suspectsAffaire/:id', async (req, reply) => {
 
 
 
-
-
-
-
-//pour récupérer tous les individu qui sont suspect dans une affaire depuis Neo4j
-// fastify.get('/suspects', async (request, reply) => {
-//   try {
-//     const result = await session.run('MATCH (n:Individu) WHERE n.statut = "suspect" RETURN n');
-//     const suspects = result.records.map(record => record.get('n').properties);
-
-//     if(!suspects){
-//       reply.status(404).send("aucun suspect trouvé");
-//     }
-    
-//     return suspects;
- 
-//   } catch (error) {
-//     reply.status(500).send('Erreur lors de la récupération des suspects');
-//   }
-// });
-
-
-
 // // Route pour récupérer les lieux visités par un individu
 // fastify.get('/lieux/:id', async (req, reply) => {
 //   try {
@@ -305,10 +282,6 @@ fastify.get('/suspectsAffaire/:id', async (req, reply) => {
 
 
 
-
-
-
-
 /*MES ENDPOINT POST POUR INTERAGIR AVEC MA BASE MONGO*/ 
 
 // Route pour ajouter une nouvelle affaire dans MongoDB
@@ -316,44 +289,147 @@ fastify.post('/affaire', async (req, reply) => {
   try {
     const db = mongoClient.db(dbName);
     const collection = db.collection('affaire');
-    const { reference, date, type, description, statut, lieu_id, temoignages, individus_impliques } = req.body;
+
+    const { description, individus, temoignages, lieux } = req.body;
+
+    // Vérification des champs obligatoires
+    if (!description || !individus || !temoignages || !lieux) {
+      return reply.status(400).send({ error: "Tous les champs obligatoires doivent être fournis." });
+    }
 
     const nouvelleAffaire = {
-      reference,
-      date,
-      type,
       description,
-      statut,
-      lieu_id,
+      individus,
       temoignages,
-      individus_impliques
+      lieux
     };
 
     const result = await collection.insertOne(nouvelleAffaire);
     reply.status(201).send({ id: result.insertedId });
+
   } catch (error) {
-    reply.status(500).send('Erreur lors de l\'ajout de l\'affaire');
+    console.error("Erreur lors de l'ajout de l'affaire :", error);
+    reply.status(500).send({ error: "Erreur serveur" });
   }
 });
 
 
 
 // Route pour ajouter un individu dans Neo4j
+// Route pour ajouter un individu dans Neo4j
 fastify.post('/individu', async (req, reply) => {
-  try {
-    const { id, nom, prenom, date_naissance, statut } = req.body;
 
-    // Ajout de l'individu
+  try {
+    const { id, nom, prenom, date_naissance} = req.body;
+
+    // Vérification des champs obligatoires
+    if (!id || !nom || !prenom || !date_naissance) {
+      return reply.status(400).send({ error: "Les champs id, nom, prenom et date_naissance sont obligatoires." });
+    }
+
+    // Exécution de la requête Cypher
     const result = await session.run(
-      'CREATE (i:Individu {id: $id, nom: $nom, prenom: $prenom, date_naissance: $date_naissance, statut: $statut}) RETURN i',
-      { id, nom, prenom, date_naissance, statut }
+      `CREATE (i:Individu {
+        id: $id, 
+        nom: $nom, 
+        prenom: $prenom, 
+        date_naissance: date($date_naissance)
+      }) RETURN i`,
+      { id, nom, prenom, date_naissance }
     );
 
-    return reply.status(201).send({ message: 'Individu ajouté', individu: result.records[0].get('i').properties });
+    // Vérification de l'ajout réussi
+    if (result.records.length === 0) {
+      return reply.status(500).send({ error: "Erreur lors de la création de l'individu" });
+    }
+
+    // Récupération des propriétés de l'individu créé
+    const individu = result.records[0].get('i').properties;
+
+    return reply.status(201).send({ message: 'Individu ajouté avec succès', individu });
+
   } catch (error) {
-    reply.status(500).send('Erreur lors de l\'ajout de l\'individu');
-  }
+    console.error("Erreur lors de l'ajout de l'individu :", error);
+    return reply.status(500).send({ error: "Erreur serveur" });
+  } 
 });
+
+
+// Route pour ajouter un appel
+fastify.post('/appel', async (req, reply) => {
+
+  try {
+    const { id, date, duree } = req.body;
+
+    // Vérification des champs obligatoires
+    if (!id || !date || duree === undefined) {
+      return reply.status(400).send({ error: "Les champs id, date et duree sont obligatoires." });
+    }
+
+    // Création de l'appel dans Neo4j
+    const result = await session.run(
+      `CREATE (a:Appel {
+        id: $id,
+        date: datetime($date),
+        duree: $duree
+      }) RETURN a`,
+      { id, date, duree }
+    );
+
+    // Vérification que l'insertion a bien eu lieu
+    if (result.records.length === 0) {
+      return reply.status(500).send({ error: "Erreur lors de la création de l'appel" });
+    }
+
+    const appel = result.records[0].get('a').properties;
+    return reply.status(201).send({ message: "Appel ajouté avec succès", appel });
+
+  } catch (error) {
+    console.error("Erreur lors de l'ajout de l'appel :", error);
+    return reply.status(500).send({ error: "Erreur serveur" });
+  } 
+});
+
+// Route pour ajouter une antenne
+fastify.post('/antenne', async (req, reply) => {
+
+
+  try {
+    const { id, adresse, latitude, longitude, type } = req.body;
+
+    // Vérification des champs obligatoires
+    if (!id || !adresse || latitude === undefined || longitude === undefined || !type) {
+      return reply.status(400).send({ error: "Les champs id, adresse, latitude, longitude et type sont obligatoires." });
+    }
+
+    // Création de l'antenne dans Neo4j
+    const result = await session.run(
+      `CREATE (ant:Antenne {
+        id: $id,
+        adresse: $adresse,
+        coordinates: point({latitude: $latitude, longitude: $longitude}),
+        type: $type
+      }) RETURN ant`,
+      { id, adresse, latitude, longitude, type }
+    );
+
+    // Vérification de l'ajout réussi
+    if (result.records.length === 0) {
+      return reply.status(500).send({ error: "Erreur lors de la création de l'antenne" });
+    }
+
+    const antenne = result.records[0].get('ant').properties;
+    return reply.status(201).send({ message: "Antenne ajoutée avec succès", antenne });
+
+  } catch (error) {
+    console.error("Erreur lors de l'ajout de l'antenne :", error);
+    return reply.status(500).send({ error: "Erreur serveur" });
+  } 
+});
+
+
+
+
 
 
 
