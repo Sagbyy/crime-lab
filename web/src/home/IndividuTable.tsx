@@ -10,18 +10,17 @@ import {
 } from "@/components/ui/table";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Case from "@/types/case";
 import { useNavigate } from "react-router";
+import { Individu } from "@/types/individu";
 import TableSkeleton from "@/components/table-skeleton";
-
-interface CaseState {
-  data: Case[];
+interface IndividuState {
+  data: Individu[];
   loading: boolean;
   error: Error | null;
 }
 
-export default function CaseTable() {
-  const [cases, setCases] = useState<CaseState>({
+export default function IndividuTable() {
+  const [individus, setIndividus] = useState<IndividuState>({
     data: [],
     loading: true,
     error: null,
@@ -30,40 +29,40 @@ export default function CaseTable() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchCases = async () => {
+    const fetchIndividus = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/affaires`
+          `${import.meta.env.VITE_API_URL}/individus`
         );
-        setCases((prevCases) => ({
-          ...prevCases,
+        setIndividus((prevIndividus) => ({
+          ...prevIndividus,
           data: response.data,
           loading: false,
         }));
       } catch (error: unknown) {
-        console.error("Erreur lors de la récupération des affaires:", error);
-        setCases((prevCases) => ({
-          ...prevCases,
+        console.error("Erreur lors de la récupération des individus:", error);
+        setIndividus((prevIndividus) => ({
+          ...prevIndividus,
           error: error as Error,
           loading: false,
         }));
       }
     };
 
-    fetchCases();
+    fetchIndividus();
   }, []);
 
-  if (cases.loading) {
+  if (individus.loading) {
     return <TableSkeleton />;
   }
 
-  if (cases.error) {
-    return <div>Error: {cases.error.message}</div>;
+  if (individus.error) {
+    return <div>Error: {individus.error.message}</div>;
   }
 
   return (
     <Table className="w-2/3 mx-auto">
-      <TableCaption>Cliquer sur une affaire pour voir les détails</TableCaption>
+      <TableCaption>Cliquer sur un individu pour voir les détails</TableCaption>
       <TableHeader>
         <TableRow className="justify-between">
           <TableHead className="w-[100px] p-4">N°</TableHead>
@@ -72,22 +71,23 @@ export default function CaseTable() {
         </TableRow>
       </TableHeader>
       <TableBody>
-        {cases.data.map((caseItem: Case) => (
+        {individus.data.map((individuItem: Individu) => (
           <TableRow
-            key={caseItem._id}
+            key={individuItem.id}
             className="cursor-pointer"
-            onClick={() => navigate(`/case/${caseItem._id}`)}
+            onClick={() => navigate(`/individu/${individuItem.id}`)}
           >
-            <TableCell className="font-medium p-4">{caseItem._id}</TableCell>
-            <TableCell className="p-4">{caseItem.description}</TableCell>
-            <TableCell className="p-4">{caseItem.lieux[0].ville}</TableCell>
+            <TableCell className="font-medium p-4">{individuItem.id}</TableCell>
+            <TableCell className="p-4">{individuItem.nom}</TableCell>
+            <TableCell className="p-4">{individuItem.prenom}</TableCell>
           </TableRow>
         ))}
       </TableBody>
       <TableFooter>
         <TableRow className="justify-between">
           <TableCell colSpan={3} className="p-4">
-            Total <span className="text-sm font-bold">{cases.data.length}</span>
+            Total{" "}
+            <span className="text-sm font-bold">{individus.data.length}</span>
           </TableCell>
         </TableRow>
       </TableFooter>

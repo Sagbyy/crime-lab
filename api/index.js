@@ -39,12 +39,15 @@ const driver = neo4j.driver(
   neo4jUri,
   neo4j.auth.basic(neo4jUser, neo4jPassword)
 );
-let session;
 
-// Connexion à Neo4j
-async function connectNeo4j() {
-  session = driver.session();
-  console.log("Neo4j connecté");
+async function executeNeo4jQuery(cypher, params = {}) {
+  const session = driver.session();
+  try {
+    const result = await session.run(cypher, params);
+    return result;
+  } finally {
+    await session.close();
+  }
 }
 
 /*MES ENDPOINT EN GET POUR INTERAGIR AVEC LES BASES MONGO*/
@@ -85,7 +88,7 @@ fastify.get("/affaire/:id", async (req, reply) => {
 //Route pour récuérer tous les individus depuis NEO4J
 fastify.get("/individus", async (request, reply) => {
   try {
-    const result = await session.run("Match (n: Individu) RETURN n");
+    const result = await executeNeo4jQuery("MATCH (n: Individu) RETURN n");
     const individus = result.records.map(
       (record) => record.get("n").properties
     );
@@ -105,7 +108,7 @@ fastify.get("/individus", async (request, reply) => {
 fastify.get("/individu/:id", async (req, reply) => {
   try {
     const { id } = req.params;
-    const result = await session.run(
+    const result = await executeNeo4jQuery(
       "MATCH (ind: Individu {id : $id}) RETURN ind",
       { id }
     );
@@ -129,18 +132,16 @@ fastify.get("/individu/:id", async (req, reply) => {
 fastify.get("/appel/:id", async (req, reply) => {
   try {
     const { id } = req.params;
-    const result = await session.run(
+    const result = await executeNeo4jQuery(
       `
       MATCH (ind: Individu {id: $id})-[apl:A_APPELE]->(a:Appel)-[u:UTILISE_ANTENNE]->(ant: Antenne)
       MATCH (a)-[:APPEL_RECU]->(ind2 : Individu)
       RETURN ind.id AS sourceId, ind.prenom AS sourceName, a.date AS date,a.duree As duree,
              ind2.id as destinationId, ind2.prenom AS destinationName,
              ant.id AS idAntenne, ant.adresse AS adresse, ant.coordinates AS localisation
-
-
       `,
       { id }
-    ); // Passer l'ID comme paramètre pour sécuriser la requête
+    );
 
     if (result.records.length === 0) {
       reply.status(404).send("Auncun appel trouvé pour cette individus");
@@ -264,8 +265,7 @@ fastify.post("/individu", async (req, reply) => {
   try {
     const { id, nom, prenom, date_naissance, statut } = req.body;
 
-    // Ajout de l'individu
-    const result = await session.run(
+    const result = await executeNeo4jQuery(
       "CREATE (i:Individu {id: $id, nom: $nom, prenom: $prenom, date_naissance: $date_naissance, statut: $statut}) RETURN i",
       { id, nom, prenom, date_naissance, statut }
     );
@@ -286,6 +286,13 @@ fastify.listen({ port: 3000, host: "0.0.0.0" }, async (err, address) => {
     process.exit(1);
   }
   await connectMongoDB();
-  await connectNeo4j();
+  // Remove the connectNeo4j call since we're not using a global session anymore
   console.log(`Server listening at ${address}`);
+});
+
+// Add cleanup on server shutdown
+process.on("SIGINT", async () => {
+  await driver.close();
+  await mongoClient.close();
+  process.exit(0);
 });
