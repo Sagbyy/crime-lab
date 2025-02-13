@@ -8,11 +8,11 @@ export default function Home() {
       <Header />
       {/* <WorldMapHome /> */}
       <h2 className="text-2xl font-bold text-center my-10">
-        Liste des affaires
+        Liste des affaires 📝
       </h2>
       <CaseTable />
       <h2 className="text-2xl font-bold text-center my-10">
-        Liste des individus
+        Liste des individus 🕵️
       </h2>
       <IndividuTable />
     </div>

@@ -66,8 +66,10 @@ export default function IndividuTable() {
       <TableHeader>
         <TableRow className="justify-between">
           <TableHead className="w-[100px] p-4">N°</TableHead>
-          <TableHead className="p-4">Description</TableHead>
-          <TableHead className="p-4">Ville</TableHead>
+          <TableHead className="p-4">Nom</TableHead>
+          <TableHead className="p-4">Prénom
+            
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
