@@ -263,18 +263,38 @@ fastify.post("/affaire", async (req, reply) => {
 // Route pour ajouter un individu dans Neo4j
 fastify.post("/individu", async (req, reply) => {
   try {
-    const { id, nom, prenom, date_naissance, statut } = req.body;
+    const { nom, prenom, date_naissance } = req.body;
+
+    // Get the highest existing ID and increment by 1 for the new ID
+    let id;
+    try {
+      const idResult = await executeNeo4jQuery(
+        "MATCH (i:Individu) WITH i.id AS id, toInteger(substring(i.id, 1)) AS numeric_id ORDER BY numeric_id DESC LIMIT 1 RETURN id;"
+      );
+
+      if (idResult.records.length === 0) {
+        throw new Error("No existing IDs found");
+      }
+      id =
+        "i" +
+        (parseInt(String(idResult.records[0].get("id")).substring(1)) + 1);
+    } catch (error) {
+      console.error("Error getting next ID:", error);
+      throw new Error("Failed to generate ID for new individual");
+    }
 
     const result = await executeNeo4jQuery(
-      "CREATE (i:Individu {id: $id, nom: $nom, prenom: $prenom, date_naissance: $date_naissance, statut: $statut}) RETURN i",
-      { id, nom, prenom, date_naissance, statut }
+      "CREATE (i:Individu {id: $id, nom: $nom, prenom: $prenom, date_naissance: $date_naissance}) RETURN i",
+      { id, nom, prenom, date_naissance }
     );
+    console.log(result);
 
     return reply.status(201).send({
       message: "Individu ajouté",
       individu: result.records[0].get("i").properties,
     });
   } catch (error) {
+    console.log(error);
     reply.status(500).send("Erreur lors de l'ajout de l'individu");
   }
 });
