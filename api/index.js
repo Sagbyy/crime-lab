@@ -245,9 +245,6 @@ fastify.get('/suspectsAffaire/:id', async (req, reply) => {
 
 
 
-
-
-
 // // Route pour récupérer les lieux visités par un individu
 // fastify.get('/lieux/:id', async (req, reply) => {
 //   try {
@@ -279,7 +276,6 @@ fastify.get('/suspectsAffaire/:id', async (req, reply) => {
 //     return reply.status(500).send({ message: "Erreur serveur" });
 //   }
 // });
-
 
 
 /*MES ENDPOINT POST POUR INTERAGIR AVEC MA BASE MONGO*/ 
@@ -426,11 +422,6 @@ fastify.post('/antenne', async (req, reply) => {
     return reply.status(500).send({ error: "Erreur serveur" });
   } 
 });
-
-
-
-
-
 
 
 
