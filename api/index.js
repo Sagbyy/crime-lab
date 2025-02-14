@@ -1,11 +1,19 @@
-const fastify = require('fastify')();
-const { MongoClient, ObjectId } = require('mongodb');
-const neo4j = require('neo4j-driver');
+const fastify = require("fastify")();
+const { MongoClient, ObjectId } = require("mongodb");
+const neo4j = require("neo4j-driver");
 
 // Configuration MongoDB
 const mongoUrl = "mongodb://mongodb:27017"; // Nom du service MongoDB dans Docker
 const dbName = "crimelab";
 let mongoClient;
+
+// CORS
+fastify.register(require("@fastify/cors"), {
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+});
+console.log("CORS enregistré");
 
 // Connexion à MongoDB
 async function connectMongoDB() {
@@ -121,23 +129,23 @@ fastify.get("/individu/:id", async (req, reply) => {
 });
 
 //Récupérer tous les appels sortant d'un individu (pour les fadettes)
-fastify.get('/appel/:id', async (req, reply) => {
-
-  try{
+fastify.get("/appel/:id", async (req, reply) => {
+  try {
     const { id } = req.params;
-    const result = await session.run(`
+    const result = await executeNeo4jQuery(
+      `
       MATCH (ind: Individu {id: $id})-[apl:A_APPELE]->(a:Appel)-[u:UTILISE_ANTENNE]->(ant: Antenne)
       MATCH (a)-[:APPEL_RECU]->(ind2 : Individu)
       RETURN ind.id AS sourceId, ind.prenom AS sourceName, a.date AS date,a.duree As duree,
              ind2.id as destinationId, ind2.prenom AS destinationName,
              ant.id AS idAntenne, ant.adresse AS adresse, ant.coordinates AS localisation
+      `,
+      { id }
+    );
 
-
-      `,{ id }); // Passer l'ID comme paramètre pour sécuriser la requête 
-
-     if(result.records.length === 0){
-        reply.status(404).send('Auncun appel trouvé pour cette individus');
-     } 
+    if (result.records.length === 0) {
+      reply.status(404).send("Auncun appel trouvé pour cette individus");
+    }
 
     const appels = result.records.map((record) => ({
       Date: record.get("date"),
@@ -152,11 +160,10 @@ fastify.get('/appel/:id', async (req, reply) => {
         prenom: record.get("destinationName"),
       },
       Loacalsiation_Relais: {
-        idAntenne : record.get('idAntenne'),
-        adresse : record.get('adresse'),
-        localisation: record.get('localisation')
-      }
-
+        idAntenne: record.get("idAntenne"),
+        adresse: record.get("adresse"),
+        localisation: record.get("localisation"),
+      },
     }));
 
     reply.send(appels);
@@ -174,27 +181,25 @@ fastify.get('/appel/:id', async (req, reply) => {
 fastify.post("/affaire", async (req, reply) => {
   try {
     const db = mongoClient.db(dbName);
-    const collection = db.collection('affaire');
-    const { reference, date, type, description, statut, lieu_id, temoignages, individus_impliques } = req.body;
+    const collection = db.collection("affaire");
+    const { description, individus, temoignages, lieux } = req.body;
 
     const nouvelleAffaire = {
       description,
       individus,
       temoignages,
-      individus_impliques
+      lieux,
     };
 
     const result = await collection.insertOne(nouvelleAffaire);
     reply.status(201).send({ id: result.insertedId });
-
   } catch (error) {
-    reply.status(500).send('Erreur lors de l\'ajout de l\'affaire');
+    reply.status(500).send("Erreur lors de l'ajout de l'affaire");
   }
 });
 
 // Route pour ajouter un individu dans Neo4j
-// Route pour ajouter un individu dans Neo4j
-fastify.post('/individu', async (req, reply) => {
+fastify.post("/individu", async (req, reply) => {
   try {
     const { nom, prenom, date_naissance } = req.body;
 
@@ -220,17 +225,17 @@ fastify.post('/individu', async (req, reply) => {
       "CREATE (i:Individu {id: $id, nom: $nom, prenom: $prenom, date_naissance: $date_naissance}) RETURN i",
       { id, nom, prenom, date_naissance }
     );
-    console.log(result);
 
-    return reply.status(201).send({ message: 'Individu ajouté', individu: result.records[0].get('i').properties });
+    console.log("Individu ajouté avec succès");
+    return reply.status(201).send({
+      message: "Individu ajouté",
+      individu: result.records[0].get("i").properties,
+    });
   } catch (error) {
     console.log(error);
     reply.status(500).send("Erreur lors de l'ajout de l'individu");
   }
 });
-
-
-
 
 // Lancer Fastify et les connexions MongoDB & Neo4j
 fastify.listen({ port: 3000, host: "0.0.0.0" }, async (err, address) => {

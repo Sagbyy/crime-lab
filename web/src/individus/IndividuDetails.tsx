@@ -11,7 +11,7 @@ import {
 import { MapPin, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useEffect } from "react";
 import { Call, Individu } from "@/types/individu";
 import { useState } from "react";
@@ -26,6 +26,8 @@ interface EntityState<T> {
 
 export default function IndividuDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const [individu, setIndividu] = useState<EntityState<Individu>>({
     data: null,
     loading: true,
@@ -49,13 +51,6 @@ export default function IndividuDetails() {
           error: null,
         });
       } catch (error: unknown) {
-        setCalls({
-          data: null,
-          loading: false,
-          error: error as Error,
-        });
-        console.error("Erreur lors de la récupération des appels:", error);
-
         if (axios.isAxiosError(error)) {
           if (error.response?.status === 404) {
             setCalls({
@@ -106,9 +101,13 @@ export default function IndividuDetails() {
     date:
       | Date
       | { year: { low: number }; month: { low: number }; day: { low: number } }
+      | string
   ) => {
     if (date instanceof Date) {
       return date.toISOString().split("T")[0];
+    }
+    if (typeof date === "string") {
+      return date;
     }
     return `${date.year.low}-${String(date.month.low).padStart(
       2,
@@ -139,11 +138,11 @@ export default function IndividuDetails() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <a href="/" className="inline-block mb-6">
+      <div onClick={() => navigate("/")} className="inline-block mb-6">
         <Button variant="outline">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Return to Home
+          <ArrowLeft className="mr-2 h-4 w-4" /> Retour à la page d'accueil
         </Button>
-      </a>
+      </div>
 
       <Card className="mb-6">
         <CardHeader>
