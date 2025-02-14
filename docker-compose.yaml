@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   mongo:
     image: mongo:8.0.4
@@ -30,15 +29,15 @@ services:
     build:
       context: ./api
     container_name: app-node
-    ports: 
+    ports:
       - "3000:3000"
     volumes:
-      - ./api:/data  
+      - ./api:/data
     depends_on:
       - mongo
-      - neo4j    
+      - neo4j
     networks:
-      - db_network    
+      - db_network
 
 volumes:
   mongo_data:
