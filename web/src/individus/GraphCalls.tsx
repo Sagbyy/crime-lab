@@ -66,7 +66,10 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
     nodes: [],
     links: [],
   });
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+  const [dimensions, setDimensions] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const graphRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,7 +83,6 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
         const links: Link[] = [];
 
         data.forEach((item: GraphData) => {
-          // Add Individuals nodes
           const addNode = (
             entity: Neo4jEntity | undefined,
             labelPrefix: string,
@@ -88,7 +90,6 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
             nodeSize: number
           ) => {
             if (entity) {
-              // Create unique ID by combining type and entity ID
               const nodeId = `${labelPrefix.toLowerCase()}-${
                 entity.identity.low
               }`;
@@ -102,7 +103,7 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
                   size: nodeSize,
                 });
               }
-              return nodeId; // Return the ID for use in links
+              return nodeId;
             }
             return null;
           };
@@ -121,7 +122,6 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
           ) {
             const appelId = addNode(item.appel, "Appel", "blue", 100);
             if (appelId) {
-              // Only create links if node was added
               const individuId = `individu-${item.individu.identity.low}`;
               const destinataireId = `individu-${item.destinataire.identity.low}`;
               const antenneId = `antenne-${item.antenne.identity.low}`;
@@ -157,7 +157,6 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
           ) {
             const appelInId = addNode(item.appel_in, "Appel", "green", 100);
             if (appelInId) {
-              // Only create links if node was added
               const sourceId = `individu-${item.source.identity.low}`;
               const individuId = `individu-${item.individu.identity.low}`;
               const antenneInId = `antenne-${item.antenne_in.identity.low}`;
@@ -193,25 +192,30 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
       });
   }, [id]);
 
-  // Add resize observer to update dimensions
   useEffect(() => {
     if (!graphRef.current) return;
 
     const updateDimensions = () => {
       if (graphRef.current) {
-        setDimensions({
-          width: graphRef.current.offsetWidth,
-          height: graphRef.current.offsetHeight,
+        const width = graphRef.current.offsetWidth;
+        const height = graphRef.current.offsetHeight;
+
+        setDimensions((prev) => {
+          if (prev?.width === width && prev?.height === height) return prev;
+          return { width, height };
         });
       }
     };
 
+    updateDimensions();
+
     const resizeObserver = new ResizeObserver(updateDimensions);
     resizeObserver.observe(graphRef.current);
-    updateDimensions();
 
     return () => resizeObserver.disconnect();
   }, []);
+
+  const shouldRenderGraph = dimensions !== null && graphData.nodes.length > 0;
 
   const graphConfig = {
     node: {
@@ -235,8 +239,8 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
       gravity: -400,
       linkLength: 200,
     },
-    height: dimensions.height,
-    width: dimensions.width,
+    height: dimensions?.height ?? 600,
+    width: dimensions?.width ?? 800,
     initialZoom: 1,
   };
 
@@ -282,7 +286,9 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
             ref={graphRef}
             className="border rounded-lg p-4 flex justify-center items-center h-[600px]"
           >
-            <Graph id="graph-id" data={graphData} config={graphConfig} />
+            {shouldRenderGraph && (
+              <Graph id="graph-id" data={graphData} config={graphConfig} />
+            )}
           </div>
         </CardContent>
       </Card>
