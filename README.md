@@ -3,6 +3,10 @@
 - Mahamadou GORY KANTÉ
 - Salahe-eddine BOUHDJEUR
 
+## Environnement variables
+
+- `web/.env.example`
+
 ## Installation
 
 ```bash

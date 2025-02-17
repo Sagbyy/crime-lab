@@ -17,7 +17,7 @@ import { Call, Individu } from "@/types/individu";
 import { useState } from "react";
 import axios from "axios";
 import Loader from "@/components/loader";
-
+import GraphCalls from "./GraphCalls";
 interface EntityState<T> {
   data: T | null;
   loading: boolean;
@@ -206,6 +206,7 @@ export default function IndividuDetails() {
           </CardContent>
         </Card>
       )}
+      {calls.data && calls.data.length > 0 && <GraphCalls id={id} />}
     </div>
   );
 }

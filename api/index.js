@@ -237,6 +237,41 @@ fastify.post("/individu", async (req, reply) => {
   }
 });
 
+// Graph from calls
+fastify.get("/graph/:id", async (req, reply) => {
+  try {
+    const { id } = req.params;
+    const result = await executeNeo4jQuery(
+      `
+      MATCH (i:Individu {id: $id})
+      OPTIONAL MATCH (i)-[:A_APPELE]->(a:Appel)-[:APPEL_RECU]->(dest:Individu)
+      OPTIONAL MATCH (a)-[:UTILISE_ANTENNE]->(ant:Antenne)
+      OPTIONAL MATCH (src:Individu)-[:A_APPELE]->(a_in:Appel)-[:APPEL_RECU]->(i)
+      OPTIONAL MATCH (a_in)-[:UTILISE_ANTENNE]->(ant_in:Antenne)
+      RETURN i, a, dest, src, a_in, ant, ant_in;
+      `,
+      { id }
+    );
+
+    const graphData = result.records.map((record) => {
+      return {
+        individu: record.get("i"),
+        appel: record.get("a"),
+        destinataire: record.get("dest"),
+        source: record.get("src"),
+        appel_in: record.get("a_in"),
+        antenne: record.get("ant"),
+        antenne_in: record.get("ant_in"),
+      };
+    });
+
+    reply.send(graphData);
+  } catch (error) {
+    console.log(error);
+    reply.status(500).send("Erreur lors de la récupération du graph");
+  }
+});
+
 // Lancer Fastify et les connexions MongoDB & Neo4j
 fastify.listen({ port: 3000, host: "0.0.0.0" }, async (err, address) => {
   if (err) {
