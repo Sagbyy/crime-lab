@@ -249,7 +249,7 @@ fastify.post("/affaire", async (req, reply) => {
   }
 });
 
-// Route pour ajouter un individu dans Neo4j
+
 // Route pour ajouter un individu dans Neo4j
 fastify.post('/individu', async (req, reply) => {
   try {
