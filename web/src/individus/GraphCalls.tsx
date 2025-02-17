@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { Graph } from "react-d3-graph";
+import { Graph } from "react-d3-graph"; // Assurez-vous que vous avez cette bibliothèque installée
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Neo4jProperties {
@@ -70,20 +70,10 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
     width: number;
     height: number;
   } | null>(null);
-  const [isClient, setIsClient] = useState(false);
   const graphRef = useRef<HTMLDivElement>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   useEffect(() => {
     if (!id) return;
-
-    setLoading(true);
-    setError(null);
 
     axios
       .get(`${import.meta.env.VITE_API_URL}/graph/${id}`)
@@ -199,66 +189,42 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
       })
       .catch((error) => {
         console.error("Error fetching graph data:", error);
-        setError("Failed to load graph data. Please try again later.");
-      })
-      .finally(() => {
-        setLoading(false);
       });
   }, [id]);
 
   useEffect(() => {
     if (!graphRef.current) return;
 
-    // Ajoutez un petit délai pour s'assurer que le DOM est prêt
-    const timer = setTimeout(() => {
-      const updateDimensions = () => {
-        if (graphRef.current) {
-          const rect = graphRef.current.getBoundingClientRect();
-          const width = Math.floor(rect.width);
-          const height = Math.floor(rect.height);
-
-          if (width > 0 && height > 0) {
-            setDimensions((prev) => {
-              if (prev?.width === width && prev?.height === height) return prev;
-              return { width, height };
-            });
-          }
-        }
-      };
-
-      updateDimensions();
-
-      const resizeObserver = new ResizeObserver(() => {
-        window.requestAnimationFrame(updateDimensions);
-      });
-
+    const updateDimensions = () => {
       if (graphRef.current) {
-        resizeObserver.observe(graphRef.current);
-      }
+        const width = graphRef.current.offsetWidth;
+        const height = graphRef.current.offsetHeight;
 
-      return () => {
-        resizeObserver.disconnect();
-        clearTimeout(timer);
-      };
-    }, 100); // Délai de 100ms
+        setDimensions((prev) => {
+          if (prev?.width === width && prev?.height === height) return prev;
+          return { width, height };
+        });
+      }
+    };
+
+    updateDimensions();
+
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    resizeObserver.observe(graphRef.current);
+
+    return () => resizeObserver.disconnect();
   }, []);
 
-  const shouldRenderGraph =
-    isClient &&
-    dimensions !== null &&
-    graphData.nodes.length > 0 &&
-    typeof window !== "undefined" &&
-    !loading &&
-    !error;
+  const shouldRenderGraph = dimensions !== null && graphData.nodes.length > 0;
 
   const graphConfig = {
-    nodeHighlightBehavior: true,
     node: {
       color: "lightblue",
       size: 200,
       fontSize: 12,
       fontWeight: "bold",
       highlightStrokeColor: "blue",
+      renderLabel: true,
       labelProperty: (node: Node) => node.label,
       fontColor: "white",
     },
@@ -272,12 +238,10 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
     d3: {
       gravity: -400,
       linkLength: 200,
-      alphaTarget: 0.05,
     },
     height: dimensions?.height ?? 600,
     width: dimensions?.width ?? 800,
-    panAndZoom: true,
-    staticGraph: false,
+    initialZoom: 1,
   };
 
   const legendItems = [
@@ -318,28 +282,12 @@ const GraphComponent = ({ id }: { id: string | undefined }) => {
             <p>👉 Cliquez sur les noeuds pour les mettre en évidence</p>
           </div>
 
-          {loading && (
-            <div className="flex justify-center items-center h-full">
-              <p>Loading graph data...</p>
-            </div>
-          )}
-          {error && (
-            <div className="flex justify-center items-center h-full text-red-500">
-              <p>{error}</p>
-            </div>
-          )}
-
           <div
             ref={graphRef}
             className="border rounded-lg p-4 flex justify-center items-center h-[600px]"
           >
             {shouldRenderGraph && (
-              <Graph
-                id="graph-id"
-                data={graphData}
-                config={graphConfig}
-                key={`${dimensions?.width}-${dimensions?.height}`}
-              />
+              <Graph id="graph-id" data={graphData} config={graphConfig} />
             )}
           </div>
         </CardContent>
