@@ -199,7 +199,8 @@ fastify.post("/affaire", async (req, reply) => {
 });
 
 // Route pour ajouter un individu dans Neo4j
-fastify.post("/individu", async (req, reply) => {
+// Route pour ajouter un individu dans Neo4j
+fastify.post('/individu', async (req, reply) => {
   try {
     const { nom, prenom, date_naissance } = req.body;
 
