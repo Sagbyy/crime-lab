@@ -42,6 +42,16 @@ services:
     networks:
       - db_network
 
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: web
+    ports:
+      - "8080:8080"
+    networks:
+      - db_network
+
 volumes:
   mongo_data:
   neo4j_data:
