@@ -28,14 +28,27 @@ services:
   node-app:
     build:
       context: ./api
+      # TODO: change to prod.Dockerfile when in production
+      dockerfile: docker/dev.Dockerfile
     container_name: app-node
     ports:
       - "3000:3000"
     volumes:
-      - ./api:/data
+      - ./api:/app
+      - /app/node_modules
     depends_on:
       - mongo
       - neo4j
+    networks:
+      - db_network
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: web
+    ports:
+      - "8080:8080"
     networks:
       - db_network
 

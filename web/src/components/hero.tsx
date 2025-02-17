@@ -2,6 +2,7 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router";
 
 interface Action {
   label: string;
@@ -42,6 +43,8 @@ const Hero = React.forwardRef<HTMLElement, HeroProps>(
     },
     ref
   ) => {
+    const navigate = useNavigate();
+
     return (
       <section
         ref={ref}
@@ -146,11 +149,13 @@ const Hero = React.forwardRef<HTMLElement, HeroProps>(
               <div className={cn("flex gap-4", actionsClassName)}>
                 {actions.map((action: Action, index: number) => (
                   <Button
+                    className="cursor-pointer"
                     key={index}
                     variant={action.variant || "default"}
                     asChild
+                    onClick={() => navigate(action.href)}
                   >
-                    <a href={action.href}>{action.label}</a>
+                    <p>{action.label}</p>
                   </Button>
                 ))}
               </div>

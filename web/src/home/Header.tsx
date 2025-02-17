@@ -8,12 +8,12 @@ function Header() {
       actions={[
         {
           label: "Enregistrer une affaire",
-          href: "#",
+          href: "/case/create",
           variant: "default",
         },
         {
           label: "Enregistrer un individu",
-          href: "#",
+          href: "/individu/create",
           variant: "default",
         },
       ]}
