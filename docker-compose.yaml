@@ -29,7 +29,7 @@ services:
     build:
       context: ./api
       # TODO: change to prod.Dockerfile when in production
-      dockerfile: docker/dev.Dockerfile
+      dockerfile: docker/prod.Dockerfile
     container_name: app-node
     ports:
       - "3000:3000"

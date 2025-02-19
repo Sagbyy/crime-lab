@@ -254,22 +254,41 @@ export function CaseReport() {
             <CardContent>
               {form.watch("temoignages").map((_, index) => (
                 <div key={index} className="space-y-4 mb-4">
-                  <FormField
-                    control={form.control}
-                    name={`temoignages.${index}.auteur`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Auteur</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Entrez le nom de l'auteur"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                  <div className="flex justify-between flex-row">
+                    <FormField
+                      control={form.control}
+                      name={`temoignages.${index}.auteur`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Auteur</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Entrez le nom de l'auteur"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {index > 0 && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          form.setValue(
+                            "temoignages",
+                            form
+                              .watch("temoignages")
+                              .filter((_, i) => i !== index)
+                          );
+                        }}
+                      >
+                        Supprimer
+                      </Button>
                     )}
-                  />
+                  </div>
                   <FormField
                     control={form.control}
                     name={`temoignages.${index}.date`}
@@ -367,22 +386,41 @@ export function CaseReport() {
             <CardContent>
               {form.watch("lieux").map((_, index) => (
                 <div key={index} className="space-y-4 mb-4">
-                  <FormField
-                    control={form.control}
-                    name={`lieux.${index}.ville`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ville</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            placeholder="Entrez le nom de la ville"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                  <div className="flex flex-row justify-between">
+                    <FormField
+                      control={form.control}
+                      name={`lieux.${index}.ville`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Ville</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Entrez le nom de la ville"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    {index > 0 && (
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => {
+                          form.setValue(
+                            "lieux",
+                            form
+                              .watch("lieux")
+                              .filter((_, i) => i !== index)
+                          );
+                        }}
+                      >
+                        Supprimer
+                      </Button>
                     )}
-                  />
+                  </div>
                   <FormField
                     control={form.control}
                     name={`lieux.${index}.adresse`}
